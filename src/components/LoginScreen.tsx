@@ -72,7 +72,7 @@ export function LoginScreen({ onLogin, attemptsLeft, isBlocked, blockMinutesLeft
             <Lock className="w-10 h-10 text-primary-foreground" />
           </div>
           <h1 className="text-2xl font-cairo font-bold text-foreground">نظام إدارة التراخيص</h1>
-          <p className="text-muted-foreground mt-1">AmPro License Management System</p>
+          <p className="text-muted-foreground mt-1">AM-Pro License Management System</p>
         </div>
 
         {/* Security Box */}
