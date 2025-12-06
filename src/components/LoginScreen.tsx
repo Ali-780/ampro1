@@ -1,32 +1,60 @@
 import { useState } from 'react';
-import { Lock, Eye, EyeOff, Shield, AlertTriangle, Clock, KeyRound } from 'lucide-react';
+import { Lock, Eye, EyeOff, Shield, AlertTriangle, Clock, KeyRound, UserCog } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Progress } from '@/components/ui/progress';
 import { SECURITY_CONFIG } from '@/lib/constants';
+import { Manager } from '@/lib/types';
 import { cn } from '@/lib/utils';
+import { toast } from 'sonner';
 
 interface LoginScreenProps {
-  onLogin: (password: string) => boolean;
   attemptsLeft: number;
   isBlocked: boolean;
   blockMinutesLeft: number;
+  onAdminLogin: (password: string) => boolean;
+  onManagerLogin: (manager: Manager) => void;
+  onFailedAttempt: () => void;
+  validateManager: (password: string) => Manager | null;
 }
 
-export function LoginScreen({ onLogin, attemptsLeft, isBlocked, blockMinutesLeft }: LoginScreenProps) {
+export function LoginScreen({ 
+  attemptsLeft, 
+  isBlocked, 
+  blockMinutesLeft,
+  onAdminLogin,
+  onManagerLogin,
+  onFailedAttempt,
+  validateManager
+}: LoginScreenProps) {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [showHint, setShowHint] = useState(false);
   const [shakeError, setShakeError] = useState(false);
+  const [loginMode, setLoginMode] = useState<'admin' | 'manager'>('admin');
 
   const handleLogin = () => {
     if (!password.trim()) return;
     
-    const success = onLogin(password);
-    if (!success) {
-      setShakeError(true);
-      setPassword('');
-      setTimeout(() => setShakeError(false), 500);
+    if (loginMode === 'admin') {
+      const success = onAdminLogin(password);
+      if (!success) {
+        setShakeError(true);
+        setPassword('');
+        setTimeout(() => setShakeError(false), 500);
+      }
+    } else {
+      const manager = validateManager(password);
+      if (manager) {
+        onManagerLogin(manager);
+        toast.success(`مرحباً ${manager.name}`);
+      } else {
+        onFailedAttempt();
+        setShakeError(true);
+        setPassword('');
+        setTimeout(() => setShakeError(false), 500);
+        toast.error('كلمة مرور المسؤول غير صحيحة');
+      }
     }
   };
 
@@ -72,7 +100,33 @@ export function LoginScreen({ onLogin, attemptsLeft, isBlocked, blockMinutesLeft
             <Lock className="w-10 h-10 text-primary-foreground" />
           </div>
           <h1 className="text-2xl font-cairo font-bold text-foreground">نظام إدارة التراخيص</h1>
-          <p className="text-muted-foreground mt-1">AM-Pro License Management System</p>
+          <p className="text-muted-foreground mt-1">AmPro License Management System</p>
+        </div>
+
+        {/* Login Mode Toggle */}
+        <div className="flex gap-2 mb-6">
+          <Button
+            variant={loginMode === 'admin' ? 'default' : 'outline'}
+            onClick={() => setLoginMode('admin')}
+            className={cn(
+              "flex-1",
+              loginMode === 'admin' && "gradient-primary"
+            )}
+          >
+            <KeyRound className="w-4 h-4 ml-2" />
+            المدير
+          </Button>
+          <Button
+            variant={loginMode === 'manager' ? 'default' : 'outline'}
+            onClick={() => setLoginMode('manager')}
+            className={cn(
+              "flex-1",
+              loginMode === 'manager' && "gradient-accent"
+            )}
+          >
+            <UserCog className="w-4 h-4 ml-2" />
+            مسؤول
+          </Button>
         </div>
 
         {/* Security Box */}
@@ -108,7 +162,9 @@ export function LoginScreen({ onLogin, attemptsLeft, isBlocked, blockMinutesLeft
 
         {/* Password Input */}
         <div className="mb-6">
-          <label className="block text-sm font-semibold mb-2">كلمة المرور</label>
+          <label className="block text-sm font-semibold mb-2">
+            {loginMode === 'admin' ? 'كلمة مرور المدير' : 'كلمة مرور المسؤول'}
+          </label>
           <div className={cn(
             "relative",
             shakeError && "animate-shake"
@@ -131,33 +187,42 @@ export function LoginScreen({ onLogin, attemptsLeft, isBlocked, blockMinutesLeft
             </button>
           </div>
           
-          <div className="flex justify-between items-center mt-2">
-            <div className="flex items-center gap-2 text-xs">
-              <span className="text-muted-foreground">تلميح:</span>
-              <span className="font-mono">{showHint ? 'فارح بوجهك' : '••••••'}</span>
-              <button 
-                onClick={() => setShowHint(!showHint)}
-                className="text-primary hover:underline text-xs"
-              >
-                {showHint ? 'إخفاء' : 'إظهار'}
-              </button>
+          {loginMode === 'admin' && (
+            <div className="flex justify-between items-center mt-2">
+              <div className="flex items-center gap-2 text-xs">
+                <span className="text-muted-foreground">تلميح:</span>
+                <span className="font-mono">{showHint ? 'فارح بوجهك' : '••••••'}</span>
+                <button 
+                  onClick={() => setShowHint(!showHint)}
+                  className="text-primary hover:underline text-xs"
+                >
+                  {showHint ? 'إخفاء' : 'إظهار'}
+                </button>
+              </div>
             </div>
-          </div>
+          )}
         </div>
 
         {/* Login Button */}
         <Button 
           onClick={handleLogin}
-          className="w-full h-12 text-lg font-semibold gradient-primary hover:opacity-90 transition-opacity"
+          className={cn(
+            "w-full h-12 text-lg font-semibold hover:opacity-90 transition-opacity",
+            loginMode === 'admin' ? "gradient-primary" : "gradient-accent"
+          )}
         >
-          <KeyRound className="w-5 h-5 ml-2" />
+          {loginMode === 'admin' ? (
+            <KeyRound className="w-5 h-5 ml-2" />
+          ) : (
+            <UserCog className="w-5 h-5 ml-2" />
+          )}
           دخول
         </Button>
 
         {/* Session Info */}
         <div className="text-center mt-6 text-xs text-muted-foreground">
           <Clock className="w-3 h-3 inline ml-1" />
-          تم التطوير بواسطة {SECURITY_CONFIG.sessionTimeout} ENGAli-Hmdani
+          الجلسة تنتهي بعد {SECURITY_CONFIG.sessionTimeout} دقيقة من الدخول
         </div>
       </div>
     </div>

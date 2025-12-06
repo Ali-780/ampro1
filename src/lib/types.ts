@@ -16,11 +16,23 @@ export interface SecurityConfig {
   blockTime: number;
 }
 
+export interface Manager {
+  id: string;
+  name: string;
+  password: string;
+  maxLicenses: number;
+  createdLicenses: number;
+  createdAt: string;
+  isActive: boolean;
+}
+
 export interface AuthState {
   isLoggedIn: boolean;
   loginAttempts: number;
   blockedUntil: number | null;
   sessionStartTime: number | null;
+  userType: 'admin' | 'manager' | null;
+  managerId: string | null;
 }
 
 export type LicenseStatus = 'active' | 'used' | 'expired' | 'all';

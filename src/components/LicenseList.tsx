@@ -6,9 +6,9 @@ import { LicenseCard } from './LicenseCard';
 interface LicenseListProps {
   licenses: License[];
   loading: boolean;
-  onEdit: (license: License) => void;
-  onReset: (key: string) => Promise<boolean>;
-  onDelete: (key: string) => Promise<boolean>;
+  onEdit?: (license: License) => void;
+  onReset?: (key: string) => Promise<boolean>;
+  onDelete?: (key: string) => Promise<boolean>;
   onRefresh: () => void;
 }
 
@@ -69,9 +69,9 @@ export function LicenseList({
           <LicenseCard
             key={license.key}
             license={license}
-            onEdit={() => onEdit(license)}
-            onReset={() => onReset(license.key)}
-            onDelete={() => onDelete(license.key)}
+            onEdit={onEdit ? () => onEdit(license) : undefined}
+            onReset={onReset ? () => onReset(license.key) : undefined}
+            onDelete={onDelete ? () => onDelete(license.key) : undefined}
             style={{ animationDelay: `${index * 50}ms` }}
           />
         ))}

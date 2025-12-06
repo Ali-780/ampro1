@@ -5,9 +5,9 @@ import { cn } from '@/lib/utils';
 
 interface LicenseCardProps {
   license: License;
-  onEdit: () => void;
-  onReset: () => void;
-  onDelete: () => void;
+  onEdit?: () => void;
+  onReset?: () => void;
+  onDelete?: () => void;
   style?: React.CSSProperties;
 }
 
@@ -28,16 +28,18 @@ export function LicenseCard({ license, onEdit, onReset, onDelete, style }: Licen
   };
 
   const handleDelete = () => {
-    if (confirm(`هل أنت متأكد من حذف الترخيص: ${license.key}؟`)) {
+    if (onDelete && confirm(`هل أنت متأكد من حذف الترخيص: ${license.key}؟`)) {
       onDelete();
     }
   };
 
   const handleReset = () => {
-    if (confirm(`هل تريد إعادة ضبط السيريال للترخيص: ${license.key}؟`)) {
+    if (onReset && confirm(`هل تريد إعادة ضبط السيريال للترخيص: ${license.key}؟`)) {
       onReset();
     }
   };
+
+  const hasActions = onEdit || onReset || onDelete;
 
   return (
     <div 
@@ -94,29 +96,37 @@ export function LicenseCard({ license, onEdit, onReset, onDelete, style }: Licen
         </div>
         
         {/* Actions */}
-        <div className="flex gap-2">
-          <Button
-            onClick={onEdit}
-            size="icon"
-            className="w-10 h-10 rounded-full gradient-primary hover:opacity-90"
-          >
-            <Edit className="w-4 h-4" />
-          </Button>
-          <Button
-            onClick={handleReset}
-            size="icon"
-            className="w-10 h-10 rounded-full gradient-warning hover:opacity-90"
-          >
-            <RotateCcw className="w-4 h-4" />
-          </Button>
-          <Button
-            onClick={handleDelete}
-            size="icon"
-            className="w-10 h-10 rounded-full gradient-danger hover:opacity-90"
-          >
-            <Trash2 className="w-4 h-4" />
-          </Button>
-        </div>
+        {hasActions && (
+          <div className="flex gap-2">
+            {onEdit && (
+              <Button
+                onClick={onEdit}
+                size="icon"
+                className="w-10 h-10 rounded-full gradient-primary hover:opacity-90"
+              >
+                <Edit className="w-4 h-4" />
+              </Button>
+            )}
+            {onReset && (
+              <Button
+                onClick={handleReset}
+                size="icon"
+                className="w-10 h-10 rounded-full gradient-warning hover:opacity-90"
+              >
+                <RotateCcw className="w-4 h-4" />
+              </Button>
+            )}
+            {onDelete && (
+              <Button
+                onClick={handleDelete}
+                size="icon"
+                className="w-10 h-10 rounded-full gradient-danger hover:opacity-90"
+              >
+                <Trash2 className="w-4 h-4" />
+              </Button>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );

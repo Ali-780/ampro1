@@ -13,3 +13,13 @@ export const FIREBASE_CONFIG = {
   db1: "https://amprofixwatool-default-rtdb.firebaseio.com/users.json",
   db2: "https://hiprotool-aa3f6-default-rtdb.firebaseio.com/users.json"
 };
+
+export const STORAGE_KEYS = {
+  managers: 'ampro_managers',
+  loggedIn: 'logged_in',
+  sessionStart: 'session_start',
+  loginAttempts: 'login_attempts',
+  blocked: 'system_blocked',
+  userType: 'user_type',
+  managerId: 'manager_id'
+};

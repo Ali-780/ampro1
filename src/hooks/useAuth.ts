@@ -1,20 +1,15 @@
 import { useState, useEffect, useCallback } from 'react';
-import { SECURITY_CONFIG } from '@/lib/constants';
-import { AuthState } from '@/lib/types';
-
-const STORAGE_KEYS = {
-  loggedIn: 'logged_in',
-  sessionStart: 'session_start',
-  loginAttempts: 'login_attempts',
-  blocked: 'system_blocked'
-};
+import { SECURITY_CONFIG, STORAGE_KEYS } from '@/lib/constants';
+import { AuthState, Manager } from '@/lib/types';
 
 export function useAuth() {
   const [authState, setAuthState] = useState<AuthState>({
     isLoggedIn: false,
     loginAttempts: 0,
     blockedUntil: null,
-    sessionStartTime: null
+    sessionStartTime: null,
+    userType: null,
+    managerId: null
   });
   const [timeLeft, setTimeLeft] = useState(SECURITY_CONFIG.sessionTimeout * 60);
 
@@ -73,6 +68,8 @@ export function useAuth() {
   const checkLoginStatus = useCallback(() => {
     const loggedIn = localStorage.getItem(STORAGE_KEYS.loggedIn);
     const sessionStart = localStorage.getItem(STORAGE_KEYS.sessionStart);
+    const userType = localStorage.getItem(STORAGE_KEYS.userType) as 'admin' | 'manager' | null;
+    const managerId = localStorage.getItem(STORAGE_KEYS.managerId);
     
     if (loggedIn === 'true' && sessionStart) {
       const sessionTime = parseInt(sessionStart);
@@ -84,22 +81,28 @@ export function useAuth() {
         setAuthState(prev => ({
           ...prev,
           isLoggedIn: true,
-          sessionStartTime: sessionTime
+          sessionStartTime: sessionTime,
+          userType,
+          managerId
         }));
       } else {
         localStorage.removeItem(STORAGE_KEYS.loggedIn);
         localStorage.removeItem(STORAGE_KEYS.sessionStart);
+        localStorage.removeItem(STORAGE_KEYS.userType);
+        localStorage.removeItem(STORAGE_KEYS.managerId);
       }
     }
   }, []);
 
-  const login = useCallback((password: string): boolean => {
+  const loginAsAdmin = useCallback((password: string): boolean => {
     if (checkBlockStatus()) return false;
     
     if (password === SECURITY_CONFIG.password) {
       const now = Date.now();
       localStorage.setItem(STORAGE_KEYS.loggedIn, 'true');
       localStorage.setItem(STORAGE_KEYS.sessionStart, now.toString());
+      localStorage.setItem(STORAGE_KEYS.userType, 'admin');
+      localStorage.removeItem(STORAGE_KEYS.managerId);
       localStorage.removeItem(STORAGE_KEYS.loginAttempts);
       localStorage.removeItem(STORAGE_KEYS.blocked);
       
@@ -108,34 +111,62 @@ export function useAuth() {
         isLoggedIn: true,
         loginAttempts: 0,
         blockedUntil: null,
-        sessionStartTime: now
+        sessionStartTime: now,
+        userType: 'admin',
+        managerId: null
       });
       return true;
     } else {
-      const newAttempts = authState.loginAttempts + 1;
-      localStorage.setItem(STORAGE_KEYS.loginAttempts, newAttempts.toString());
-      
-      if (newAttempts >= SECURITY_CONFIG.maxAttempts) {
-        const blockUntil = Date.now() + SECURITY_CONFIG.blockTime * 60000;
-        localStorage.setItem(STORAGE_KEYS.blocked, JSON.stringify({ until: blockUntil }));
-        setAuthState(prev => ({
-          ...prev,
-          loginAttempts: newAttempts,
-          blockedUntil: blockUntil
-        }));
-      } else {
-        setAuthState(prev => ({
-          ...prev,
-          loginAttempts: newAttempts
-        }));
-      }
+      handleFailedAttempt();
       return false;
     }
-  }, [authState.loginAttempts, checkBlockStatus]);
+  }, [checkBlockStatus]);
+
+  const loginAsManager = useCallback((manager: Manager): void => {
+    const now = Date.now();
+    localStorage.setItem(STORAGE_KEYS.loggedIn, 'true');
+    localStorage.setItem(STORAGE_KEYS.sessionStart, now.toString());
+    localStorage.setItem(STORAGE_KEYS.userType, 'manager');
+    localStorage.setItem(STORAGE_KEYS.managerId, manager.id);
+    localStorage.removeItem(STORAGE_KEYS.loginAttempts);
+    localStorage.removeItem(STORAGE_KEYS.blocked);
+    
+    setTimeLeft(SECURITY_CONFIG.sessionTimeout * 60);
+    setAuthState({
+      isLoggedIn: true,
+      loginAttempts: 0,
+      blockedUntil: null,
+      sessionStartTime: now,
+      userType: 'manager',
+      managerId: manager.id
+    });
+  }, []);
+
+  const handleFailedAttempt = useCallback(() => {
+    const newAttempts = authState.loginAttempts + 1;
+    localStorage.setItem(STORAGE_KEYS.loginAttempts, newAttempts.toString());
+    
+    if (newAttempts >= SECURITY_CONFIG.maxAttempts) {
+      const blockUntil = Date.now() + SECURITY_CONFIG.blockTime * 60000;
+      localStorage.setItem(STORAGE_KEYS.blocked, JSON.stringify({ until: blockUntil }));
+      setAuthState(prev => ({
+        ...prev,
+        loginAttempts: newAttempts,
+        blockedUntil: blockUntil
+      }));
+    } else {
+      setAuthState(prev => ({
+        ...prev,
+        loginAttempts: newAttempts
+      }));
+    }
+  }, [authState.loginAttempts]);
 
   const logout = useCallback((timeout = false) => {
     localStorage.removeItem(STORAGE_KEYS.loggedIn);
     localStorage.removeItem(STORAGE_KEYS.sessionStart);
+    localStorage.removeItem(STORAGE_KEYS.userType);
+    localStorage.removeItem(STORAGE_KEYS.managerId);
     
     if (timeout) {
       localStorage.removeItem(STORAGE_KEYS.loginAttempts);
@@ -146,6 +177,8 @@ export function useAuth() {
       ...prev,
       isLoggedIn: false,
       sessionStartTime: null,
+      userType: null,
+      managerId: null,
       loginAttempts: timeout ? 0 : prev.loginAttempts
     }));
   }, []);
@@ -160,8 +193,13 @@ export function useAuth() {
     timeLeft,
     attemptsLeft,
     blockMinutesLeft,
-    login,
+    loginAsAdmin,
+    loginAsManager,
+    handleFailedAttempt,
     logout,
-    isBlocked: authState.blockedUntil !== null && Date.now() < authState.blockedUntil
+    isBlocked: authState.blockedUntil !== null && Date.now() < authState.blockedUntil,
+    isAdmin: authState.userType === 'admin',
+    isManager: authState.userType === 'manager'
   };
 }
+
