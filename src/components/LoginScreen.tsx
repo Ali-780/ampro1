@@ -100,7 +100,7 @@ export function LoginScreen({
             <Lock className="w-10 h-10 text-primary-foreground" />
           </div>
           <h1 className="text-2xl font-cairo font-bold text-foreground">نظام إدارة التراخيص</h1>
-          <p className="text-muted-foreground mt-1">AmPro License Management System</p>
+          <p className="text-muted-foreground mt-1">AMPro License Management System</p>
         </div>
 
         {/* Login Mode Toggle */}
@@ -191,7 +191,7 @@ export function LoginScreen({
             <div className="flex justify-between items-center mt-2">
               <div className="flex items-center gap-2 text-xs">
                 <span className="text-muted-foreground">تلميح:</span>
-                <span className="font-mono">{showHint ? 'فارح بوجهك' : '••••••'}</span>
+                <span className="font-mono">{showHint ? 'المطور:967777966865' : '••••••'}</span>
                 <button 
                   onClick={() => setShowHint(!showHint)}
                   className="text-primary hover:underline text-xs"
