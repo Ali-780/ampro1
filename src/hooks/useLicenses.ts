@@ -134,15 +134,8 @@ export function useLicenses() {
     }
   }, [loadLicenses]);
 
-  const deleteLicense = useCallback(async (key: string, onBeforeDelete?: (license: License) => Promise<void>) => {
+  const deleteLicense = useCallback(async (key: string) => {
     try {
-      // Find the license to save before deleting
-      const licenseToDelete = licenses.find(l => l.key === key);
-      
-      if (licenseToDelete && onBeforeDelete) {
-        await onBeforeDelete(licenseToDelete);
-      }
-      
       const url = `${FIREBASE_CONFIG.mainDb}/license_keys/${encodeURIComponent(key)}.json?auth=${FIREBASE_CONFIG.authToken}`;
       const response = await fetch(url, { method: 'DELETE' });
       
@@ -156,7 +149,7 @@ export function useLicenses() {
       toast.error('فشل حذف الترخيص');
       return false;
     }
-  }, [loadLicenses, licenses]);
+  }, [loadLicenses]);
 
   const filterLicenses = useCallback((filter: LicenseFilter, searchQuery: string) => {
     let filtered = [...licenses];
