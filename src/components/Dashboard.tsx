@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { LogOut, RefreshCw, Users, Database, Clock, Key, Plus, Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useLicenses } from '@/hooks/useLicenses';
+import { useDeletedLicenses } from '@/hooks/useDeletedLicenses';
 import { LicenseFilter } from '@/lib/types';
 import { StatCard } from './StatCard';
 import { CreateLicenseForm } from './CreateLicenseForm';
@@ -9,6 +10,9 @@ import { LicenseSearch } from './LicenseSearch';
 import { LicenseList } from './LicenseList';
 import { EditLicenseDialog } from './EditLicenseDialog';
 import { ManagerSettings } from './ManagerSettings';
+import { OnlineDevicesButton } from './OnlineDevicesButton';
+import { ExportLicensesButton } from './ExportLicensesButton';
+import { DeletedLicensesDialog } from './DeletedLicensesDialog';
 import { License } from '@/lib/types';
 import { toast } from 'sonner';
 
@@ -43,6 +47,15 @@ export function Dashboard({ timeLeft, onLogout, isAdmin, managerId, managersHook
     filterLicenses,
     getLicenseStats
   } = useLicenses();
+
+  const {
+    deletedLicenses,
+    loading: deletedLoading,
+    loadDeletedLicenses,
+    addDeletedLicense,
+    permanentlyDelete,
+    restoreLicense
+  } = useDeletedLicenses();
 
   const [filter, setFilter] = useState<LicenseFilter>('all');
   const [searchQuery, setSearchQuery] = useState('');
@@ -87,6 +100,22 @@ export function Dashboard({ timeLeft, onLogout, isAdmin, managerId, managersHook
     return success;
   };
 
+  // Handle delete with saving to deleted licenses
+  const handleDeleteLicense = async (key: string) => {
+    const onBeforeDelete = async (license: License) => {
+      await addDeletedLicense({
+        original_key: license.key,
+        user_name: license.userName,
+        expires_at: license.expiresAt,
+        hwid: license.hwid,
+        notes: license.notes,
+        deleted_by: isAdmin ? 'admin' : currentManager?.name || 'manager'
+      });
+    };
+
+    return deleteLicense(key, onBeforeDelete);
+  };
+
   const currentManager = managerId ? managersHook.getManagerById(managerId) : null;
   const remainingLicenses = managerId ? managersHook.getManagerRemainingLicenses(managerId) : null;
 
@@ -121,15 +150,42 @@ export function Dashboard({ timeLeft, onLogout, isAdmin, managerId, managersHook
                 <span className="text-sm font-medium">{licenseStats.active} نشط</span>
               </div>
               
+              <ExportLicensesButton licenses={filteredLicenses} />
+              
               {isAdmin && (
-                <Button
-                  onClick={() => setShowManagerSettings(true)}
-                  size="sm"
-                  variant="secondary"
-                  className="bg-primary-foreground/10 hover:bg-primary-foreground/20 text-primary-foreground border-0"
-                >
-                  <Settings className="w-4 h-4" />
-                </Button>
+                <>
+                  <DeletedLicensesDialog
+                    deletedLicenses={deletedLicenses}
+                    loading={deletedLoading}
+                    onPermanentDelete={permanentlyDelete}
+                    onRestore={async (license) => {
+                      const result = await restoreLicense(license);
+                      if (result.success && result.licenseData) {
+                        // Re-create the license
+                        await createLicense({
+                          key: result.licenseData.original_key,
+                          userName: result.licenseData.user_name || '',
+                          expiresAt: result.licenseData.expires_at || '',
+                          hwid: result.licenseData.hwid || '',
+                          notes: result.licenseData.notes || '',
+                          used: result.licenseData.hwid ? true : false
+                        });
+                        loadLicenses();
+                      }
+                      return result;
+                    }}
+                    onRefresh={loadDeletedLicenses}
+                  />
+                  <OnlineDevicesButton userType={isAdmin ? 'admin' : managerId ? 'manager' : null} />
+                  <Button
+                    onClick={() => setShowManagerSettings(true)}
+                    size="sm"
+                    variant="secondary"
+                    className="bg-primary-foreground/10 hover:bg-primary-foreground/20 text-primary-foreground border-0"
+                  >
+                    <Settings className="w-4 h-4" />
+                  </Button>
+                </>
               )}
               
               <Button
@@ -160,14 +216,14 @@ export function Dashboard({ timeLeft, onLogout, isAdmin, managerId, managersHook
         {/* Stats Section */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
           <StatCard
-            title="AM-Pro"
+            title="قاعدة البيانات 1"
             value={stats.db1}
             icon={<Database className="w-5 h-5" />}
             color="primary"
             onRefresh={() => updateStats(1)}
           />
           <StatCard
-            title="Hi-Pro"
+            title="قاعدة البيانات 2"
             value={stats.db2}
             icon={<Database className="w-5 h-5" />}
             color="success"
@@ -208,7 +264,7 @@ export function Dashboard({ timeLeft, onLogout, isAdmin, managerId, managersHook
           loading={loading}
           onEdit={isAdmin ? setEditingLicense : undefined}
           onReset={isAdmin ? resetHWID : undefined}
-          onDelete={isAdmin ? deleteLicense : undefined}
+          onDelete={isAdmin ? handleDeleteLicense : undefined}
           onRefresh={loadLicenses}
         />
       </main>
