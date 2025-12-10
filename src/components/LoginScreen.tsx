@@ -222,7 +222,7 @@ export function LoginScreen({
         {/* Session Info */}
         <div className="text-center mt-6 text-xs text-muted-foreground">
           <Clock className="w-3 h-3 inline ml-1" />
-          ENGAli-Mansoor {SECURITY_CONFIG.sessionTimeout} تم التطوير بواسطة
+          تم التطوير بواسطة {SECURITY_CONFIG.sessionTimeout} ENGAli-Mansoor
         </div>
       </div>
     </div>
