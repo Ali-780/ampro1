@@ -250,14 +250,14 @@ export function Dashboard({ timeLeft, onLogout, isAdmin, managerId, managersHook
         {/* Stats Section */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
           <StatCard
-            title="قاعدة البيانات 1"
+            title="AM-Pro"
             value={stats.db1}
             icon={<Database className="w-5 h-5" />}
             color="primary"
             onRefresh={() => updateStats(1)}
           />
           <StatCard
-            title="قاعدة البيانات 2"
+            title="Hi-Pro"
             value={stats.db2}
             icon={<Database className="w-5 h-5" />}
             color="success"
