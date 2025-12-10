@@ -14,6 +14,36 @@ export type Database = {
   }
   public: {
     Tables: {
+      activity_logs: {
+        Row: {
+          action_type: string
+          created_at: string
+          details: string | null
+          id: string
+          license_key: string | null
+          performed_by: string
+          user_name: string | null
+        }
+        Insert: {
+          action_type: string
+          created_at?: string
+          details?: string | null
+          id?: string
+          license_key?: string | null
+          performed_by?: string
+          user_name?: string | null
+        }
+        Update: {
+          action_type?: string
+          created_at?: string
+          details?: string | null
+          id?: string
+          license_key?: string | null
+          performed_by?: string
+          user_name?: string | null
+        }
+        Relationships: []
+      }
       banned_devices: {
         Row: {
           banned_at: string

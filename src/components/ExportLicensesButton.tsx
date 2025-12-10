@@ -77,11 +77,12 @@ export function ExportLicensesButton({ licenses }: ExportLicensesButtonProps) {
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button
+          variant="outline"
           size="sm"
-          variant="secondary"
-          className="bg-primary-foreground/10 hover:bg-primary-foreground/20 text-primary-foreground border-0"
+          className="gap-2"
         >
           <Download className="w-4 h-4" />
+          <span>تصدير</span>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="min-w-[180px]">
