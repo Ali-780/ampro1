@@ -191,7 +191,7 @@ export function LoginScreen({
             <div className="flex justify-between items-center mt-2">
               <div className="flex items-center gap-2 text-xs">
                 <span className="text-muted-foreground">تلميح:</span>
-                <span className="font-mono">{showHint ? 'فارح بوجهك' : '••••••'}</span>
+                <span className="font-mono">{showHint ? 'المطور:967777966865' : '••••••'}</span>
                 <button 
                   onClick={() => setShowHint(!showHint)}
                   className="text-primary hover:underline text-xs"
@@ -222,7 +222,7 @@ export function LoginScreen({
         {/* Session Info */}
         <div className="text-center mt-6 text-xs text-muted-foreground">
           <Clock className="w-3 h-3 inline ml-1" />
-          الجلسة تنتهي بعد {SECURITY_CONFIG.sessionTimeout} دقيقة من الدخول
+          ENGAli-Mansoor {SECURITY_CONFIG.sessionTimeout} تم التطوير بواسطة
         </div>
       </div>
     </div>
